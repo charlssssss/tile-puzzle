@@ -10,15 +10,15 @@ export default function App() {
   const [tiles, setTiles] = useState([]);
 
   const [emptyTile, setEmptyTile] = useState({
-    x: Math.floor(Math.random() * dimesion.x),
-    y: Math.floor(Math.random() * dimesion.y),
+    x: 0,
+    y: 0,
   });
 
   const [tilesAroundEmpty, setTilesAroundEmpty] = useState({
-    top: { x: emptyTile.x, y: emptyTile.y - 1 },
-    bottom: { x: emptyTile.x, y: emptyTile.y + 1 },
-    left: { x: emptyTile.x - 1, y: emptyTile.y },
-    right: { x: emptyTile.x + 1, y: emptyTile.y },
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
   });
 
   useEffect(() => {
@@ -38,6 +38,17 @@ export default function App() {
           idx: tileCount,
           pos: shuffledTilesArray[tilesIndex],
         });
+
+        if (shuffledTilesArray[tilesIndex] === dimesion.x * dimesion.y) {
+          setEmptyTile({ x: j, y: i });
+
+          setTilesAroundEmpty({
+            top: { x: j, y: i - 1 },
+            bottom: { x: j, y: i + 1 },
+            left: { x: j - 1, y: i },
+            right: { x: j + 1, y: i },
+          });
+        }
         tileCount++;
         tilesIndex++;
       }
@@ -47,12 +58,10 @@ export default function App() {
   };
 
   const shuffleTiles = (length) => {
-    const tilesArray = Array.from({ length }, (_, index) => index + 1);
+    const tilesArray = Array.from({ length }, (_, index) => index + 1).sort(
+      () => Math.random() - 0.5,
+    );
 
-    for (let i = tilesArray.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [tilesArray[i], tilesArray[j]] = [tilesArray[j], tilesArray[i]];
-    }
     return tilesArray;
   };
 
@@ -141,11 +150,8 @@ export default function App() {
   };
 
   return (
-    <>
-      <div
-        className="flex w-[500px] flex-wrap items-start justify-center border border-blue-500 p-5"
-        onKeyPress={(e) => handler(e)}
-      >
+    <div className="flex h-screen w-screen items-center justify-center">
+      <div className="flex w-[500px] flex-wrap items-start justify-center p-5">
         {tiles.map((yTile, yIndex) =>
           yTile.map((xTile, xIndex) => {
             return (
@@ -160,20 +166,24 @@ export default function App() {
           }),
         )}
       </div>
-    </>
+    </div>
   );
 }
 
 const TileContainer = (props) => {
-  const tileColor = props.empty
-    ? "bg-blue-50"
-    : props.hasEmptySide
-    ? "bg-blue-500"
-    : "bg-blue-700";
-  const tileText = props.empty ? "text-black" : "text-blue-50";
+  const tileColor =
+    props.idx === props.pos && !props.empty
+      ? "bg-orange-500"
+      : props.empty
+      ? "bg-blue-50"
+      : props.hasEmptySide
+      ? "bg-blue-500"
+      : "bg-blue-700";
+  const tileText =
+    props.empty || props.idx === props.pos ? "text-black" : "text-blue-50";
   return (
     <div
-      className={`h-[100px] w-[100px] border border-blue-100 p-5 transition-all active:scale-90 ${tileColor} ${tileText}`}
+      className={`h-[100px] w-[100px] border border-blue-100 p-5  transition-all active:scale-90 ${tileColor} ${tileText}`}
       onClick={() => props.handleMove()}
     >
       {props.pos !== dimesion.x * dimesion.y && (
