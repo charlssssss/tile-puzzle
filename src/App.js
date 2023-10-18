@@ -190,7 +190,7 @@ export default function App() {
   }, [tilesAroundEmpty]);
 
   return (
-    <div className="flex h-screen w-screen items-center justify-center">
+    <div className="font-gabarito flex h-screen w-screen items-center justify-center">
       <div className="flex w-[500px] flex-wrap items-start justify-center p-5">
         {tiles.map((yTile, yIndex) =>
           yTile.map((xTile, xIndex) => {
