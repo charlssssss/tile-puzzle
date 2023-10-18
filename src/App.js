@@ -15,31 +15,35 @@ export default function App() {
   });
 
   const [tilesAroundEmpty, setTilesAroundEmpty] = useState({
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
+    top: { x: 0, y: 0 },
+    bottom: { x: 0, y: 0 },
+    left: { x: 0, y: 0 },
+    right: { x: 0, y: 0 },
   });
 
   useEffect(() => {
-    generateDimension(dimesion);
+    generateTiles(dimesion);
   }, []);
 
-  const generateDimension = (dimesion) => {
+  const generateTiles = (dimesion) => {
     let tileCount = 1;
-    let tilesIndex = 0;
+    let tileIndex = 0;
     let tileContainer = [];
-    const shuffledTilesArray = shuffleTiles(dimesion.x * dimesion.y);
+
+    // Shuffled tiles (1 - 15 for example).
+    const shuffledTiles = shuffleTiles(dimesion.x * dimesion.y);
 
     for (let i = 0; i < dimesion.y; i++) {
       tileContainer.push([]);
       for (let j = 0; j < dimesion.x; j++) {
         tileContainer[i].push({
           idx: tileCount,
-          pos: shuffledTilesArray[tilesIndex],
+          pos: shuffledTiles[tileIndex],
         });
 
-        if (shuffledTilesArray[tilesIndex] === dimesion.x * dimesion.y) {
+        // If the tile is the last tile in the array, it will set as the empty tile.
+        // And also update the tiles around the empty tile.
+        if (shuffledTiles[tileIndex] === dimesion.x * dimesion.y) {
           setEmptyTile({ x: j, y: i });
 
           setTilesAroundEmpty({
@@ -49,18 +53,20 @@ export default function App() {
             right: { x: j + 1, y: i },
           });
         }
+        tileIndex++;
         tileCount++;
-        tilesIndex++;
       }
     }
-
     setTiles(tileContainer);
   };
 
   const shuffleTiles = (length) => {
-    const tilesArray = Array.from({ length }, (_, index) => index + 1).sort(
-      () => Math.random() - 0.5,
-    );
+    const tilesArray = Array.from({ length }, (_, index) => index + 1);
+
+    for (let i = tilesArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [tilesArray[i], tilesArray[j]] = [tilesArray[j], tilesArray[i]];
+    }
 
     return tilesArray;
   };
@@ -143,11 +149,45 @@ export default function App() {
     }
   };
 
-  const handler = (event) => {
-    // changing the state to the name of the key
-    // which is pressed
-    console.log(event.key);
-  };
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      // Handle the key press event here
+      // For example, you can check which key was pressed using event.key
+      if (event.key === "ArrowLeft") {
+        handleMove(
+          tilesAroundEmpty.right.x,
+          tilesAroundEmpty.right.y,
+          tiles[tilesAroundEmpty.right.y][tilesAroundEmpty.right.x].pos,
+        );
+      } else if (event.key === "ArrowRight") {
+        handleMove(
+          tilesAroundEmpty.left.x,
+          tilesAroundEmpty.left.y,
+          tiles[tilesAroundEmpty.left.y][tilesAroundEmpty.left.x].pos,
+        );
+      } else if (event.key === "ArrowUp") {
+        handleMove(
+          tilesAroundEmpty.bottom.x,
+          tilesAroundEmpty.bottom.y,
+          tiles[tilesAroundEmpty.bottom.y][tilesAroundEmpty.bottom.x].pos,
+        );
+      } else if (event.key === "ArrowDown") {
+        handleMove(
+          tilesAroundEmpty.top.x,
+          tilesAroundEmpty.top.y,
+          tiles[tilesAroundEmpty.top.y][tilesAroundEmpty.top.x].pos,
+        );
+      }
+    };
+
+    // Add the event listener when the component mounts
+    window.addEventListener("keydown", handleKeyPress);
+
+    // Remove the event listener when the component unmounts
+    return () => {
+      window.removeEventListener("keydown", handleKeyPress);
+    };
+  }, [tilesAroundEmpty]);
 
   return (
     <div className="flex h-screen w-screen items-center justify-center">
