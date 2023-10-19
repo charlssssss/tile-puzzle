@@ -153,30 +153,20 @@ export default function App() {
     const handleKeyPress = (event) => {
       // Handle the key press event here
       // For example, you can check which key was pressed using event.key
-      if (event.key === "ArrowLeft") {
-        handleMove(
-          tilesAroundEmpty.right.x,
-          tilesAroundEmpty.right.y,
-          tiles[tilesAroundEmpty.right.y][tilesAroundEmpty.right.x].pos,
-        );
-      } else if (event.key === "ArrowRight") {
-        handleMove(
-          tilesAroundEmpty.left.x,
-          tilesAroundEmpty.left.y,
-          tiles[tilesAroundEmpty.left.y][tilesAroundEmpty.left.x].pos,
-        );
-      } else if (event.key === "ArrowUp") {
-        handleMove(
-          tilesAroundEmpty.bottom.x,
-          tilesAroundEmpty.bottom.y,
-          tiles[tilesAroundEmpty.bottom.y][tilesAroundEmpty.bottom.x].pos,
-        );
-      } else if (event.key === "ArrowDown") {
-        handleMove(
-          tilesAroundEmpty.top.x,
-          tilesAroundEmpty.top.y,
-          tiles[tilesAroundEmpty.top.y][tilesAroundEmpty.top.x].pos,
-        );
+      const { top, bottom, left, right } = tilesAroundEmpty;
+
+      try {
+        if (event.key === "ArrowLeft") {
+          handleMove(right.x, right.y, tiles[right.y][right.x].pos);
+        } else if (event.key === "ArrowRight") {
+          handleMove(left.x, left.y, tiles[left.y][left.x].pos);
+        } else if (event.key === "ArrowUp") {
+          handleMove(bottom.x, bottom.y, tiles[bottom.y][bottom.x].pos);
+        } else if (event.key === "ArrowDown") {
+          handleMove(top.x, top.y, tiles[top.y][top.x].pos);
+        }
+      } catch (error) {
+        console.log(error);
       }
     };
 
@@ -190,7 +180,7 @@ export default function App() {
   }, [tilesAroundEmpty]);
 
   return (
-    <div className="font-gabarito flex h-screen w-screen items-center justify-center">
+    <div className="flex h-screen w-screen items-center justify-center bg-[#121212] font-gabarito">
       <div className="flex w-[500px] flex-wrap items-start justify-center p-5">
         {tiles.map((yTile, yIndex) =>
           yTile.map((xTile, xIndex) => {
@@ -215,21 +205,19 @@ const TileContainer = (props) => {
     props.idx === props.pos && !props.empty
       ? "bg-orange-500"
       : props.empty
-      ? "bg-blue-50"
-      : props.hasEmptySide
-      ? "bg-blue-500"
-      : "bg-blue-700";
+      ? "bg-[#121212]"
+      : // : props.hasEmptySide
+        // ? "bg-blue-500"
+        "bg-blue-700";
   const tileText =
     props.empty || props.idx === props.pos ? "text-black" : "text-blue-50";
   return (
     <div
-      className={`h-[100px] w-[100px] border border-blue-100 p-5  transition-all active:scale-90 ${tileColor} ${tileText}`}
+      className={`flex h-[100px] w-[100px] items-center justify-center border border-transparent p-5  transition-all active:scale-90 ${tileColor} ${tileText}`}
       onClick={() => props.handleMove()}
     >
-      {props.pos !== dimesion.x * dimesion.y && (
-        <h2 className="text-lg">{props.pos}</h2>
-      )}
-      <p className="text-xs">{props.idx}</p>
+      <h2 className="text-3xl font-bold">{!props.empty && props.pos}</h2>
+      {/* <p className="text-xs">{props.idx}</p> */}
     </div>
   );
 };
