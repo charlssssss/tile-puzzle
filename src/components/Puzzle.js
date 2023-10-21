@@ -1,8 +1,11 @@
 import { useEffect } from "react";
 import { useState } from "react";
+import Modal from "./Modal";
+import { timerFormat } from "../Calculations";
 
 const Puzzle = (props) => {
   const [tiles, setTiles] = useState([]);
+  const [moveCount, setMoveCount] = useState(0);
 
   const [emptyTile, setEmptyTile] = useState({ x: 0, y: 0 });
 
@@ -74,7 +77,7 @@ const Puzzle = (props) => {
     if (isTileEmpty(xIndex, yIndex)) {
       alert("huh?");
     } else {
-      if (isTilesAroundEmpty(xIndex, yIndex).isAroundEmpty) {
+      if (isTilesAroundEmpty(xIndex, yIndex)) {
         setEmptyTile({ x: xIndex, y: yIndex });
 
         setTilesAroundEmpty({
@@ -94,6 +97,7 @@ const Puzzle = (props) => {
           );
         });
         startTimer();
+        setMoveCount((prevState) => prevState + 1);
       } else {
         alert("nope! can't move");
       }
@@ -170,43 +174,18 @@ const Puzzle = (props) => {
 
   const isTilesAroundEmpty = (xIndex, yIndex) => {
     if (
-      tilesAroundEmpty.top.x === xIndex &&
-      tilesAroundEmpty.top.y === yIndex
+      (tilesAroundEmpty.top.x === xIndex &&
+        tilesAroundEmpty.top.y === yIndex) ||
+      (tilesAroundEmpty.bottom.x === xIndex &&
+        tilesAroundEmpty.bottom.y === yIndex) ||
+      (tilesAroundEmpty.left.x === xIndex &&
+        tilesAroundEmpty.left.y === yIndex) ||
+      (tilesAroundEmpty.right.x === xIndex &&
+        tilesAroundEmpty.right.y === yIndex)
     ) {
-      return {
-        isAroundEmpty: true,
-        direction: "down",
-      };
-    } else if (
-      tilesAroundEmpty.bottom.x === xIndex &&
-      tilesAroundEmpty.bottom.y === yIndex
-    ) {
-      return {
-        isAroundEmpty: true,
-        direction: "up",
-      };
-    } else if (
-      tilesAroundEmpty.left.x === xIndex &&
-      tilesAroundEmpty.left.y === yIndex
-    ) {
-      return {
-        isAroundEmpty: true,
-        direction: "right",
-      };
-    } else if (
-      tilesAroundEmpty.right.x === xIndex &&
-      tilesAroundEmpty.right.y === yIndex
-    ) {
-      return {
-        isAroundEmpty: true,
-        direction: "left",
-      };
-    } else {
-      return {
-        isAroundEmpty: false,
-        direction: null,
-      };
+      return true;
     }
+    return false;
   };
 
   const startTimer = () => {
@@ -219,27 +198,39 @@ const Puzzle = (props) => {
 
   const resetTimer = () => {
     generateTiles(props.dimension);
+    setMoveCount(0);
     props.setIsActive(false);
     props.setTime(0);
     props.setIsFinished(false);
   };
 
   return (
-    <div className="flex w-[500px] flex-wrap items-start justify-center p-5">
-      {tiles.map((yTile, yIndex) =>
-        yTile.map((xTile, xIndex) => {
-          return (
-            <TileContainer
-              key={xTile.idx}
-              {...xTile}
-              empty={isTileEmpty(xIndex, yIndex)}
-              hasEmptySide={isTilesAroundEmpty(xIndex, yIndex).isAroundEmpty}
-              handleMove={() => handleMove(xIndex, yIndex, xTile.pos)}
-            />
-          );
-        }),
-      )}
-    </div>
+    <>
+      <Modal
+        isOpen={props.isFinished}
+        setIsOpen={() => props.setIsFinished(false)}
+        modalTitle={"Puzzle Solved!"}
+        modalContent={FinishedModalContent(props.time, moveCount)}
+        modalButton={"Play Again"}
+        closeModalEvent={resetTimer}
+      />
+
+      <div className="flex w-[500px] flex-wrap items-start justify-center p-5">
+        {tiles.map((yTile, yIndex) =>
+          yTile.map((xTile, xIndex) => {
+            return (
+              <TileContainer
+                key={xTile.idx}
+                {...xTile}
+                empty={isTileEmpty(xIndex, yIndex)}
+                hasEmptySide={isTilesAroundEmpty(xIndex, yIndex)}
+                handleMove={() => handleMove(xIndex, yIndex, xTile.pos)}
+              />
+            );
+          }),
+        )}
+      </div>
+    </>
   );
 };
 
@@ -262,6 +253,14 @@ const TileContainer = (props) => {
       <h2 className="text-3xl font-bold">{!props.empty && props.pos}</h2>
       {/* <p className="text-xs">{props.idx}</p> */}
     </div>
+  );
+};
+
+const FinishedModalContent = (time, moveCount) => {
+  return (
+    <p>{`You solved the puzzle in ${timerFormat(
+      time,
+    )}s with ${moveCount} moves.`}</p>
   );
 };
 

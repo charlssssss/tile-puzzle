@@ -6,10 +6,6 @@ const Modal = (props) => {
     props.setIsOpen(false);
   }
 
-  function openModal() {
-    props.setIsOpen(true);
-  }
-
   return (
     <>
       <Transition appear show={props.isOpen} as={Fragment}>
@@ -49,8 +45,12 @@ const Modal = (props) => {
                   <div className="mt-4 flex justify-end">
                     <button
                       type="button"
-                      className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                      onClick={closeModal}
+                      className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-blue-900 hover:bg-blue-200 focus:outline-none"
+                      onClick={
+                        props.closeModalEvent
+                          ? props.closeModalEvent
+                          : closeModal
+                      }
                     >
                       {props.modalButton}
                     </button>
