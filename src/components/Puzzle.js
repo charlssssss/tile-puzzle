@@ -1,18 +1,10 @@
 import { useEffect } from "react";
 import { useState } from "react";
 
-const dimesion = {
-  x: 4,
-  y: 4,
-};
-
-const Puzzle = () => {
+const Puzzle = (props) => {
   const [tiles, setTiles] = useState([]);
 
-  const [emptyTile, setEmptyTile] = useState({
-    x: 0,
-    y: 0,
-  });
+  const [emptyTile, setEmptyTile] = useState({ x: 0, y: 0 });
 
   const [tilesAroundEmpty, setTilesAroundEmpty] = useState({
     top: { x: 0, y: 0 },
@@ -22,26 +14,117 @@ const Puzzle = () => {
   });
 
   useEffect(() => {
-    generateTiles(dimesion);
+    generateTiles(props.dimension);
   }, []);
 
   useEffect(() => {
-    if (handleSolvedPuzzle(dimesion)) {
-      alert("you won!");
+    if (handleSolvedPuzzle(props.dimension)) {
+      props.setIsFinished(true);
+      props.setIsActive(false);
     }
   }, [tiles]);
 
-  const generateTiles = (dimesion) => {
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      const { top, bottom, left, right } = tilesAroundEmpty;
+      if (!props.isFinished) {
+        try {
+          switch (event.key) {
+            case "ArrowLeft":
+              handleMove(right.x, right.y, tiles[right.y][right.x].pos);
+              startTimer();
+              break;
+            case "ArrowRight":
+              handleMove(left.x, left.y, tiles[left.y][left.x].pos);
+              startTimer();
+              break;
+            case "ArrowUp":
+              handleMove(bottom.x, bottom.y, tiles[bottom.y][bottom.x].pos);
+              startTimer();
+              break;
+            case "ArrowDown":
+              handleMove(top.x, top.y, tiles[top.y][top.x].pos);
+              startTimer();
+              break;
+            case "Enter":
+              resetTimer();
+              break;
+            case " ":
+              pauseTimer();
+              break;
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      } else {
+        event.key === "Enter" && resetTimer();
+      }
+    };
+
+    // Add the event listener when the component mounts
+    window.addEventListener("keydown", handleKeyPress);
+
+    // Remove the event listener when the component unmounts
+    return () => {
+      window.removeEventListener("keydown", handleKeyPress);
+    };
+  }, [tilesAroundEmpty]);
+
+  const handleMove = (xIndex, yIndex, pos) => {
+    if (isTileEmpty(xIndex, yIndex)) {
+      alert("huh?");
+    } else {
+      if (isTilesAroundEmpty(xIndex, yIndex).isAroundEmpty) {
+        setEmptyTile({ x: xIndex, y: yIndex });
+
+        setTilesAroundEmpty({
+          top: { x: xIndex, y: yIndex - 1 },
+          bottom: { x: xIndex, y: yIndex + 1 },
+          left: { x: xIndex - 1, y: yIndex },
+          right: { x: xIndex + 1, y: yIndex },
+        });
+
+        setTiles((prevState) => {
+          return prevState.map((outer, oIdx) =>
+            oIdx !== emptyTile.y
+              ? outer
+              : outer.map((inner, iIdx) =>
+                  iIdx === emptyTile.x ? { ...inner, pos } : inner,
+                ),
+          );
+        });
+        startTimer();
+      } else {
+        alert("nope! can't move");
+      }
+    }
+  };
+
+  const handleSolvedPuzzle = (dimension) => {
+    const totalTiles = dimension.x * dimension.y - 1;
+    let sameIndexPosCount = 0;
+
+    tiles.map((outer) => {
+      outer.map((inner) => {
+        if (inner.idx === inner.pos) sameIndexPosCount++;
+      });
+    });
+
+    return sameIndexPosCount === totalTiles;
+  };
+
+  const generateTiles = (dimension) => {
+    const totalTiles = dimension.x * dimension.y;
     let tileCount = 1;
     let tileIndex = 0;
     let tileContainer = [];
 
     // Shuffled tiles (1 - 15 for example).
-    const shuffledTiles = shuffleTiles(dimesion.x * dimesion.y);
+    const shuffledTiles = shuffleTiles(totalTiles);
 
-    for (let i = 0; i < dimesion.y; i++) {
+    for (let i = 0; i < dimension.y; i++) {
       tileContainer.push([]);
-      for (let j = 0; j < dimesion.x; j++) {
+      for (let j = 0; j < dimension.x; j++) {
         tileContainer[i].push({
           idx: tileCount,
           pos: shuffledTiles[tileIndex],
@@ -49,7 +132,7 @@ const Puzzle = () => {
 
         // If the tile is the last tile in the array, it will set as the empty tile.
         // And also update the tiles around the empty tile.
-        if (shuffledTiles[tileIndex] === dimesion.x * dimesion.y) {
+        if (shuffledTiles[tileIndex] === totalTiles) {
           setEmptyTile({ x: j, y: i });
 
           setTilesAroundEmpty({
@@ -126,78 +209,20 @@ const Puzzle = () => {
     }
   };
 
-  const handleMove = (xIndex, yIndex, pos) => {
-    if (isTileEmpty(xIndex, yIndex)) {
-      alert("huh?");
-    } else {
-      if (isTilesAroundEmpty(xIndex, yIndex).isAroundEmpty) {
-        setEmptyTile({ x: xIndex, y: yIndex });
-
-        setTilesAroundEmpty({
-          top: { x: xIndex, y: yIndex - 1 },
-          bottom: { x: xIndex, y: yIndex + 1 },
-          left: { x: xIndex - 1, y: yIndex },
-          right: { x: xIndex + 1, y: yIndex },
-        });
-
-        setTiles((prevState) => {
-          return prevState.map((outer, oIdx) =>
-            oIdx !== emptyTile.y
-              ? outer
-              : outer.map((inner, iIdx) =>
-                  iIdx === emptyTile.x ? { ...inner, pos } : inner,
-                ),
-          );
-        });
-      } else {
-        alert("nope! can't move");
-      }
-    }
+  const startTimer = () => {
+    props.setIsActive(true);
   };
 
-  const handleSolvedPuzzle = (dimesion) => {
-    let sameIndexPosCount = 0;
-
-    tiles.map((outer) => {
-      outer.map((inner) => {
-        if (inner.idx === inner.pos) sameIndexPosCount++;
-      });
-    });
-
-    return sameIndexPosCount === dimesion.x * dimesion.y - 1;
+  const pauseTimer = () => {
+    props.setIsActive(false);
   };
 
-  useEffect(() => {
-    const handleKeyPress = (event) => {
-      // Handle the key press event here
-      // For example, you can check which key was pressed using event.key
-      const { top, bottom, left, right } = tilesAroundEmpty;
-
-      try {
-        if (event.key === "ArrowLeft") {
-          handleMove(right.x, right.y, tiles[right.y][right.x].pos);
-        } else if (event.key === "ArrowRight") {
-          handleMove(left.x, left.y, tiles[left.y][left.x].pos);
-        } else if (event.key === "ArrowUp") {
-          handleMove(bottom.x, bottom.y, tiles[bottom.y][bottom.x].pos);
-        } else if (event.key === "ArrowDown") {
-          handleMove(top.x, top.y, tiles[top.y][top.x].pos);
-        } else if (event.key === "Enter") {
-          generateTiles(dimesion);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    // Add the event listener when the component mounts
-    window.addEventListener("keydown", handleKeyPress);
-
-    // Remove the event listener when the component unmounts
-    return () => {
-      window.removeEventListener("keydown", handleKeyPress);
-    };
-  }, [tilesAroundEmpty]);
+  const resetTimer = () => {
+    generateTiles(props.dimension);
+    props.setIsActive(false);
+    props.setTime(0);
+    props.setIsFinished(false);
+  };
 
   return (
     <div className="flex w-[500px] flex-wrap items-start justify-center p-5">
@@ -221,9 +246,9 @@ const Puzzle = () => {
 const TileContainer = (props) => {
   const tileColor =
     props.idx === props.pos && !props.empty
-      ? "bg-orange-500"
+      ? "bg-red-500"
       : props.empty
-      ? "bg-[#121212]"
+      ? "bg-blue-50"
       : // : props.hasEmptySide
         // ? "bg-blue-500"
         "bg-blue-700";
