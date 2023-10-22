@@ -30,7 +30,7 @@ const Puzzle = (props) => {
   useEffect(() => {
     const handleKeyPress = (event) => {
       const { top, bottom, left, right } = tilesAroundEmpty;
-      if (!props.isFinished) {
+      if (!handleSolvedPuzzle(props.dimension)) {
         try {
           switch (event.key) {
             case "ArrowLeft":
@@ -126,40 +126,44 @@ const Puzzle = (props) => {
     // Shuffled tiles (1 - 15 for example).
     const shuffledTiles = shuffleTiles(totalTiles);
 
-    for (let i = 0; i < dimension.y; i++) {
-      tileContainer.push([]);
-      for (let j = 0; j < dimension.x; j++) {
-        tileContainer[i].push({
-          idx: tileCount,
-          pos: shuffledTiles[tileIndex],
-        });
-
-        // If the tile is the last tile in the array, it will set as the empty tile.
-        // And also update the tiles around the empty tile.
-        if (shuffledTiles[tileIndex] === totalTiles) {
-          setEmptyTile({ x: j, y: i });
-
-          setTilesAroundEmpty({
-            top: { x: j, y: i - 1 },
-            bottom: { x: j, y: i + 1 },
-            left: { x: j - 1, y: i },
-            right: { x: j + 1, y: i },
+    if (isSolvable(shuffledTiles)) {
+      for (let i = 0; i < dimension.y; i++) {
+        tileContainer.push([]);
+        for (let j = 0; j < dimension.x; j++) {
+          tileContainer[i].push({
+            idx: tileCount,
+            pos: shuffledTiles[tileIndex],
           });
+
+          // If the tile is the last tile in the array, it will set as the empty tile.
+          // And also update the tiles around the empty tile.
+          if (shuffledTiles[tileIndex] === 0) {
+            setEmptyTile({ x: j, y: i });
+
+            setTilesAroundEmpty({
+              top: { x: j, y: i - 1 },
+              bottom: { x: j, y: i + 1 },
+              left: { x: j - 1, y: i },
+              right: { x: j + 1, y: i },
+            });
+          }
+          tileIndex++;
+          tileCount++;
         }
-        tileIndex++;
-        tileCount++;
       }
+      setTiles(tileContainer);
+    } else {
+      generateTiles(props.dimension);
     }
-    setTiles(tileContainer);
   };
 
   const shuffleTiles = (length) => {
     const tilesArray = Array.from({ length }, (_, index) => index + 1);
-
     for (let i = tilesArray.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [tilesArray[i], tilesArray[j]] = [tilesArray[j], tilesArray[i]];
     }
+    tilesArray[tilesArray.indexOf(16)] = 0;
 
     return tilesArray;
   };
@@ -186,6 +190,38 @@ const Puzzle = (props) => {
       return true;
     }
     return false;
+  };
+
+  const isSolvable = (puzzle) => {
+    let parity = 0;
+    let gridWidth = 4;
+    let row = 0;
+    let blankRow = 0;
+    for (let i = 0; i < puzzle.length; i++) {
+      if (i % gridWidth == 0) {
+        // advance to next row
+        row++;
+      }
+      if (puzzle[i] == 0) {
+        blankRow = row;
+        continue;
+      }
+      for (var j = i + 1; j < puzzle.length; j++) {
+        if (puzzle[i] > puzzle[j] && puzzle[j] != 0) {
+          parity++;
+        }
+      }
+    }
+
+    if (gridWidth % 2 == 0) {
+      if (blankRow % 2 == 0) {
+        return parity % 2 == 0;
+      } else {
+        return parity % 2 != 0;
+      }
+    } else {
+      return parity % 2 == 0;
+    }
   };
 
   const startTimer = () => {
