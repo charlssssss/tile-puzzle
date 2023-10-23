@@ -9,6 +9,7 @@ import {
   isTilesAroundEmpty,
   shuffleTiles,
 } from "../utils/gameLogic";
+import TileContainer from "./TileContainer";
 
 const Puzzle = (props) => {
   const [tiles, setTiles] = useState([]);
@@ -22,63 +23,6 @@ const Puzzle = (props) => {
     left: { x: 0, y: 0 },
     right: { x: 0, y: 0 },
   });
-
-  useEffect(() => {
-    generateTiles(props.dimension);
-  }, []);
-
-  useEffect(() => {
-    if (isPuzzleSolved(tiles, props.dimension)) {
-      props.setIsFinished(true);
-      props.setIsActive(false);
-    }
-  }, [tiles]);
-
-  useEffect(() => {
-    const handleKeyPress = (event) => {
-      const { top, bottom, left, right } = tilesAroundEmpty;
-      if (!isPuzzleSolved(tiles, props.dimension)) {
-        try {
-          switch (event.key) {
-            case "ArrowLeft":
-              handleMove(right.x, right.y, tiles[right.y][right.x].pos);
-              startTimer();
-              break;
-            case "ArrowRight":
-              handleMove(left.x, left.y, tiles[left.y][left.x].pos);
-              startTimer();
-              break;
-            case "ArrowUp":
-              handleMove(bottom.x, bottom.y, tiles[bottom.y][bottom.x].pos);
-              startTimer();
-              break;
-            case "ArrowDown":
-              handleMove(top.x, top.y, tiles[top.y][top.x].pos);
-              startTimer();
-              break;
-            case "Enter":
-              resetTimer();
-              break;
-            case " ":
-              pauseTimer();
-              break;
-          }
-        } catch (error) {
-          console.log(error);
-        }
-      } else {
-        event.key === "Enter" && resetTimer();
-      }
-    };
-
-    // Add the event listener when the component mounts
-    window.addEventListener("keydown", handleKeyPress);
-
-    // Remove the event listener when the component unmounts
-    return () => {
-      window.removeEventListener("keydown", handleKeyPress);
-    };
-  }, [tilesAroundEmpty]);
 
   const handleMove = (xIndex, yIndex, pos) => {
     if (isTileEmpty(emptyTile, xIndex, yIndex)) {
@@ -120,7 +64,7 @@ const Puzzle = (props) => {
     // Shuffled tiles (1 - 15 for example).
     const shuffledTiles = shuffleTiles(totalTiles);
 
-    if (isSolvable(shuffledTiles)) {
+    if (isSolvable(shuffledTiles, props.dimension.x)) {
       for (let i = 0; i < dimension.y; i++) {
         tileContainer.push([]);
         for (let j = 0; j < dimension.x; j++) {
@@ -167,6 +111,64 @@ const Puzzle = (props) => {
     props.setIsFinished(false);
   };
 
+  useEffect(() => {
+    generateTiles(props.dimension);
+  }, [generateTiles]);
+
+  useEffect(() => {
+    if (isPuzzleSolved(tiles, props.dimension)) {
+      props.setIsFinished(true);
+      props.setIsActive(false);
+    }
+  }, [tiles]);
+
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      const { top, bottom, left, right } = tilesAroundEmpty;
+      if (!isPuzzleSolved(tiles, props.dimension)) {
+        try {
+          switch (event.key) {
+            case "ArrowLeft":
+              handleMove(right.x, right.y, tiles[right.y][right.x].pos);
+              startTimer();
+              break;
+            case "ArrowRight":
+              handleMove(left.x, left.y, tiles[left.y][left.x].pos);
+              startTimer();
+              break;
+            case "ArrowUp":
+              handleMove(bottom.x, bottom.y, tiles[bottom.y][bottom.x].pos);
+              startTimer();
+              break;
+            case "ArrowDown":
+              handleMove(top.x, top.y, tiles[top.y][top.x].pos);
+              startTimer();
+              break;
+            case "Enter":
+              resetTimer();
+              break;
+            case " ":
+              pauseTimer();
+              break;
+            default:
+          }
+        } catch (error) {
+          console.log(error);
+        }
+      } else {
+        event.key === "Enter" && resetTimer();
+      }
+    };
+
+    // Add the event listener when the component mounts
+    window.addEventListener("keydown", handleKeyPress);
+
+    // Remove the event listener when the component unmounts
+    return () => {
+      window.removeEventListener("keydown", handleKeyPress);
+    };
+  }, [tilesAroundEmpty, startTimer, pauseTimer, resetTimer, handleMove, tiles]);
+
   return (
     <>
       <Modal
@@ -178,48 +180,30 @@ const Puzzle = (props) => {
         closeModalEvent={resetTimer}
       />
 
-      <div className="flex w-[500px] flex-wrap items-start justify-center p-5">
-        {tiles.map((yTile, yIndex) =>
-          yTile.map((xTile, xIndex) => {
-            return (
-              <TileContainer
-                key={xTile.idx}
-                {...xTile}
-                empty={isTileEmpty(emptyTile, xIndex, yIndex)}
-                hasEmptySide={isTilesAroundEmpty(
-                  tilesAroundEmpty,
-                  xIndex,
-                  yIndex,
-                )}
-                handleMove={() => handleMove(xIndex, yIndex, xTile.pos)}
-              />
-            );
-          }),
-        )}
+      <div className="flex flex-col">
+        {tiles.map((yTile, yIndex) => {
+          return (
+            <div className="flex">
+              {yTile.map((xTile, xIndex) => {
+                return (
+                  <TileContainer
+                    key={xTile.idx}
+                    {...xTile}
+                    empty={isTileEmpty(emptyTile, xIndex, yIndex)}
+                    hasEmptySide={isTilesAroundEmpty(
+                      tilesAroundEmpty,
+                      xIndex,
+                      yIndex,
+                    )}
+                    handleMove={() => handleMove(xIndex, yIndex, xTile.pos)}
+                  />
+                );
+              })}
+            </div>
+          );
+        })}
       </div>
     </>
-  );
-};
-
-const TileContainer = (props) => {
-  const tileColor =
-    props.idx === props.pos && !props.empty
-      ? "bg-red-500"
-      : props.empty
-      ? "bg-blue-50"
-      : // : props.hasEmptySide
-        // ? "bg-blue-500"
-        "bg-blue-700";
-  const tileText =
-    props.empty || props.idx === props.pos ? "text-black" : "text-blue-50";
-  return (
-    <div
-      className={`flex h-[100px] w-[100px] items-center justify-center border border-transparent p-5  transition-all active:scale-90 ${tileColor} ${tileText}`}
-      onClick={() => props.handleMove()}
-    >
-      <h2 className="text-3xl font-bold">{!props.empty && props.pos}</h2>
-      {/* <p className="text-xs">{props.idx}</p> */}
-    </div>
   );
 };
 

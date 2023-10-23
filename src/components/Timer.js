@@ -17,7 +17,7 @@ function Timer(props) {
   }, [props.isActive, props.time]);
 
   return (
-    <div className="absolute  left-4 top-4  rounded-lg bg-red-500 px-4 py-2  font-rubik text-white drop-shadow-lg">
+    <div className="absolute  left-4 top-4  rounded-lg bg-red-500 px-4 py-2  font-rubik text-white">
       <p className="stroke-rose-50 text-2xl font-medium">
         {timerFormat(props.time)}
       </p>

@@ -4,40 +4,40 @@ export const shuffleTiles = (length) => {
     const j = Math.floor(Math.random() * (i + 1));
     [tilesArray[i], tilesArray[j]] = [tilesArray[j], tilesArray[i]];
   }
-  tilesArray[tilesArray.indexOf(16)] = 0;
+  tilesArray[tilesArray.indexOf(length)] = 0;
 
   return tilesArray;
 };
 
-export const isSolvable = (puzzle) => {
+export const isSolvable = (puzzle, width) => {
   let parity = 0;
-  let gridWidth = 4;
+  let gridWidth = width;
   let row = 0;
   let blankRow = 0;
   for (let i = 0; i < puzzle.length; i++) {
-    if (i % gridWidth == 0) {
+    if (i % gridWidth === 0) {
       // advance to next row
       row++;
     }
-    if (puzzle[i] == 0) {
+    if (puzzle[i] === 0) {
       blankRow = row;
       continue;
     }
     for (var j = i + 1; j < puzzle.length; j++) {
-      if (puzzle[i] > puzzle[j] && puzzle[j] != 0) {
+      if (puzzle[i] > puzzle[j] && puzzle[j] !== 0) {
         parity++;
       }
     }
   }
 
-  if (gridWidth % 2 == 0) {
-    if (blankRow % 2 == 0) {
-      return parity % 2 == 0;
+  if (gridWidth % 2 === 0) {
+    if (blankRow % 2 === 0) {
+      return parity % 2 === 0;
     } else {
-      return parity % 2 != 0;
+      return parity % 2 !== 0;
     }
   } else {
-    return parity % 2 == 0;
+    return parity % 2 === 0;
   }
 };
 
@@ -66,8 +66,8 @@ export const isPuzzleSolved = (tilesArray, dimension) => {
   const totalTiles = dimension.x * dimension.y - 1;
   let sameIndexPosCount = 0;
 
-  tilesArray.map((outer) => {
-    outer.map((inner) => {
+  tilesArray.forEach((outer) => {
+    outer.forEach((inner) => {
       if (inner.idx === inner.pos) sameIndexPosCount++;
     });
   });
