@@ -1,7 +1,14 @@
 import { useEffect } from "react";
 import { useState } from "react";
 import Modal from "./Modal";
-import { timerFormat } from "../Calculations";
+import { timerFormat } from "../utils/calculations";
+import {
+  isPuzzleSolved,
+  isSolvable,
+  isTileEmpty,
+  isTilesAroundEmpty,
+  shuffleTiles,
+} from "../utils/gameLogic";
 
 const Puzzle = (props) => {
   const [tiles, setTiles] = useState([]);
@@ -21,7 +28,7 @@ const Puzzle = (props) => {
   }, []);
 
   useEffect(() => {
-    if (handleSolvedPuzzle(props.dimension)) {
+    if (isPuzzleSolved(tiles, props.dimension)) {
       props.setIsFinished(true);
       props.setIsActive(false);
     }
@@ -30,7 +37,7 @@ const Puzzle = (props) => {
   useEffect(() => {
     const handleKeyPress = (event) => {
       const { top, bottom, left, right } = tilesAroundEmpty;
-      if (!handleSolvedPuzzle(props.dimension)) {
+      if (!isPuzzleSolved(tiles, props.dimension)) {
         try {
           switch (event.key) {
             case "ArrowLeft":
@@ -74,10 +81,10 @@ const Puzzle = (props) => {
   }, [tilesAroundEmpty]);
 
   const handleMove = (xIndex, yIndex, pos) => {
-    if (isTileEmpty(xIndex, yIndex)) {
+    if (isTileEmpty(emptyTile, xIndex, yIndex)) {
       alert("huh?");
     } else {
-      if (isTilesAroundEmpty(xIndex, yIndex)) {
+      if (isTilesAroundEmpty(tilesAroundEmpty, xIndex, yIndex)) {
         setEmptyTile({ x: xIndex, y: yIndex });
 
         setTilesAroundEmpty({
@@ -102,19 +109,6 @@ const Puzzle = (props) => {
         alert("nope! can't move");
       }
     }
-  };
-
-  const handleSolvedPuzzle = (dimension) => {
-    const totalTiles = dimension.x * dimension.y - 1;
-    let sameIndexPosCount = 0;
-
-    tiles.map((outer) => {
-      outer.map((inner) => {
-        if (inner.idx === inner.pos) sameIndexPosCount++;
-      });
-    });
-
-    return sameIndexPosCount === totalTiles;
   };
 
   const generateTiles = (dimension) => {
@@ -157,73 +151,6 @@ const Puzzle = (props) => {
     }
   };
 
-  const shuffleTiles = (length) => {
-    const tilesArray = Array.from({ length }, (_, index) => index + 1);
-    for (let i = tilesArray.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [tilesArray[i], tilesArray[j]] = [tilesArray[j], tilesArray[i]];
-    }
-    tilesArray[tilesArray.indexOf(16)] = 0;
-
-    return tilesArray;
-  };
-
-  const isTileEmpty = (xIndex, yIndex) => {
-    if (emptyTile.x === xIndex && emptyTile.y === yIndex) {
-      return true;
-    } else {
-      return false;
-    }
-  };
-
-  const isTilesAroundEmpty = (xIndex, yIndex) => {
-    if (
-      (tilesAroundEmpty.top.x === xIndex &&
-        tilesAroundEmpty.top.y === yIndex) ||
-      (tilesAroundEmpty.bottom.x === xIndex &&
-        tilesAroundEmpty.bottom.y === yIndex) ||
-      (tilesAroundEmpty.left.x === xIndex &&
-        tilesAroundEmpty.left.y === yIndex) ||
-      (tilesAroundEmpty.right.x === xIndex &&
-        tilesAroundEmpty.right.y === yIndex)
-    ) {
-      return true;
-    }
-    return false;
-  };
-
-  const isSolvable = (puzzle) => {
-    let parity = 0;
-    let gridWidth = 4;
-    let row = 0;
-    let blankRow = 0;
-    for (let i = 0; i < puzzle.length; i++) {
-      if (i % gridWidth == 0) {
-        // advance to next row
-        row++;
-      }
-      if (puzzle[i] == 0) {
-        blankRow = row;
-        continue;
-      }
-      for (var j = i + 1; j < puzzle.length; j++) {
-        if (puzzle[i] > puzzle[j] && puzzle[j] != 0) {
-          parity++;
-        }
-      }
-    }
-
-    if (gridWidth % 2 == 0) {
-      if (blankRow % 2 == 0) {
-        return parity % 2 == 0;
-      } else {
-        return parity % 2 != 0;
-      }
-    } else {
-      return parity % 2 == 0;
-    }
-  };
-
   const startTimer = () => {
     props.setIsActive(true);
   };
@@ -258,8 +185,12 @@ const Puzzle = (props) => {
               <TileContainer
                 key={xTile.idx}
                 {...xTile}
-                empty={isTileEmpty(xIndex, yIndex)}
-                hasEmptySide={isTilesAroundEmpty(xIndex, yIndex)}
+                empty={isTileEmpty(emptyTile, xIndex, yIndex)}
+                hasEmptySide={isTilesAroundEmpty(
+                  tilesAroundEmpty,
+                  xIndex,
+                  yIndex,
+                )}
                 handleMove={() => handleMove(xIndex, yIndex, xTile.pos)}
               />
             );

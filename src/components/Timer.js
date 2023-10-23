@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { timerFormat } from "../Calculations";
+import { timerFormat } from "../utils/calculations";
 
 function Timer(props) {
   useEffect(() => {
