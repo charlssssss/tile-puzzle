@@ -1,7 +1,10 @@
 import React, { useEffect } from "react";
 import { timerFormat } from "../utils/calculations";
+import gameColor from "../utils/gameColor";
 
 function Timer(props) {
+  const { color } = props;
+
   useEffect(() => {
     let timerInterval;
 
@@ -17,8 +20,10 @@ function Timer(props) {
   }, [props.isActive, props.time]);
 
   return (
-    <div className="absolute  left-4 top-4 z-10 rounded-lg bg-[#171717] px-4 py-2 font-rubik text-white">
-      <p className="stroke-rose-50 text-2xl font-medium">
+    <div
+      className={`absolute  left-4 top-4 z-10 rounded-lg px-4 py-2 ${gameColor[color].correctText} ${gameColor[color].correctTile}`}
+    >
+      <p className="stroke-rose-50 text-2xl font-bold">
         {timerFormat(props.time)}
       </p>
     </div>

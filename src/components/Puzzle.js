@@ -12,6 +12,8 @@ import {
 import TileContainer from "./TileContainer";
 
 const Puzzle = (props) => {
+  const { settings } = props;
+
   const [tiles, setTiles] = useState([]);
   const [moveCount, setMoveCount] = useState(0);
 
@@ -64,7 +66,7 @@ const Puzzle = (props) => {
     // Shuffled tiles (1 - 15 for example).
     const shuffledTiles = shuffleTiles(totalTiles);
 
-    if (isSolvable(shuffledTiles, props.dimension.x)) {
+    if (isSolvable(shuffledTiles, settings.dimension.x)) {
       for (let i = 0; i < dimension.y; i++) {
         tileContainer.push([]);
         for (let j = 0; j < dimension.x; j++) {
@@ -91,7 +93,7 @@ const Puzzle = (props) => {
       }
       setTiles(tileContainer);
     } else {
-      generateTiles(props.dimension);
+      generateTiles(settings.dimension);
     }
   };
 
@@ -104,7 +106,7 @@ const Puzzle = (props) => {
   };
 
   const resetTimer = () => {
-    generateTiles(props.dimension);
+    generateTiles(settings.dimension);
     setMoveCount(0);
     props.setIsActive(false);
     props.setTime(0);
@@ -112,11 +114,11 @@ const Puzzle = (props) => {
   };
 
   useEffect(() => {
-    generateTiles(props.dimension);
-  }, [props.dimension]);
+    generateTiles(settings.dimension);
+  }, [settings.dimension]);
 
   useEffect(() => {
-    if (isPuzzleSolved(tiles, props.dimension)) {
+    if (isPuzzleSolved(tiles, settings.dimension)) {
       props.setIsFinished(true);
       props.setIsActive(false);
     }
@@ -125,7 +127,7 @@ const Puzzle = (props) => {
   useEffect(() => {
     const handleKeyPress = (event) => {
       const { top, bottom, left, right } = tilesAroundEmpty;
-      if (!isPuzzleSolved(tiles, props.dimension)) {
+      if (!isPuzzleSolved(tiles, settings.dimension)) {
         try {
           switch (event.key) {
             case "ArrowLeft":
@@ -178,6 +180,7 @@ const Puzzle = (props) => {
         modalContent={FinishedModalContent(props.time, moveCount)}
         modalButton={"Play Again"}
         closeModalEvent={resetTimer}
+        color={settings.color}
       />
 
       <div className="flex flex-col">
@@ -189,6 +192,7 @@ const Puzzle = (props) => {
                   <TileContainer
                     key={xTile.idx}
                     {...xTile}
+                    settings={settings}
                     empty={isTileEmpty(emptyTile, xIndex, yIndex)}
                     hasEmptySide={isTilesAroundEmpty(
                       tilesAroundEmpty,

@@ -1,15 +1,18 @@
 import { Dialog, Transition } from "@headlessui/react";
 import React, { Fragment } from "react";
+import gameColor from "../utils/gameColor";
 
 const Modal = (props) => {
-  function closeModal() {
+  const { color } = props;
+
+  const closeModal = () => {
     props.setIsOpen(false);
-  }
+  };
 
   return (
     <>
       <Transition appear show={props.isOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-10" onClose={closeModal}>
+        <Dialog as="div" className="relative z-10" onClose={() => null}>
           <Transition.Child
             as={Fragment}
             enter="ease-out duration-300"
@@ -45,7 +48,7 @@ const Modal = (props) => {
                   <div className="mt-4 flex justify-end">
                     <button
                       type="button"
-                      className="inline-flex justify-center rounded-md border border-transparent bg-[#494949] px-4 py-2 text-sm font-medium text-[#ffffff] hover:bg-[#171717] focus:outline-none"
+                      className={`inline-flex justify-center rounded-md border border-transparent px-4 py-2 text-sm font-medium transition-all hover:opacity-75 focus:outline-none ${gameColor[color].correctText} ${gameColor[color].correctTile}`}
                       onClick={
                         props.closeModalEvent
                           ? props.closeModalEvent

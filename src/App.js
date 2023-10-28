@@ -1,12 +1,12 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import ErrorPage from "./pages/ErrorPage";
+import Error from "./pages/Error";
 import TilePuzzle from "./pages/TilePuzzle";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <TilePuzzle />,
-    errorElement: <ErrorPage />,
+    errorElement: <Error />,
   },
 ]);
 
