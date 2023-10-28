@@ -113,7 +113,7 @@ const Puzzle = (props) => {
 
   useEffect(() => {
     generateTiles(props.dimension);
-  }, [generateTiles]);
+  }, [props.dimension]);
 
   useEffect(() => {
     if (isPuzzleSolved(tiles, props.dimension)) {
@@ -167,7 +167,7 @@ const Puzzle = (props) => {
     return () => {
       window.removeEventListener("keydown", handleKeyPress);
     };
-  }, [tilesAroundEmpty, startTimer, pauseTimer, resetTimer, handleMove, tiles]);
+  }, [tilesAroundEmpty]);
 
   return (
     <>
@@ -183,7 +183,7 @@ const Puzzle = (props) => {
       <div className="flex flex-col">
         {tiles.map((yTile, yIndex) => {
           return (
-            <div className="flex">
+            <div className="flex" key={yIndex}>
               {yTile.map((xTile, xIndex) => {
                 return (
                   <TileContainer
